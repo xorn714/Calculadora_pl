@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'simplexSolver.dart';
 
 class SimplexScreen extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class _SimplexScreenState extends State<SimplexScreen> {
   final TextEditingController _resController = TextEditingController(text: '2');
 
   List<List<TextEditingController>> _matrixControllers = [];
+  Map<String, dynamic> _resultadoSimplex = {};
 
   @override
   void initState() {
@@ -176,78 +178,102 @@ class _SimplexScreenState extends State<SimplexScreen> {
                 const SizedBox(height: 8),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  child: Table(
-                    border: TableBorder.all(),
-                    defaultColumnWidth: const FixedColumnWidth(60),
-                    children: [
-                      // Encabezados de columnas
-                      TableRow(
-                        decoration: BoxDecoration(color: Colors.grey[200]),
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Text('Z',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                          for (int j = 0; j < _numVariables; j++)
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
+                  child: Center(
+                    child: Table(
+                      border: TableBorder.all(),
+                      defaultColumnWidth: const FixedColumnWidth(60),
+                      children: [
+                        // Encabezados de columnas
+                        TableRow(
+                          decoration: BoxDecoration(color: Colors.grey[200]),
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text('Z',
+                                  textAlign: TextAlign.center,
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                            for (int j = 0; j < _numVariables; j++)
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  'x${j + 1}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            for (int j = 0; j < _numRestricciones; j++)
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  'S${j + 1}', // Cambiado de 'h' a 'S'
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            const Padding(
+                              padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'x${j + 1}',
+                                'Sol',
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-                          for (int j = 0; j < _numRestricciones; j++)
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                'S${j + 1}', // Cambiado de 'h' a 'S'
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Text(
-                              'Sol',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Fila de la función objetivo (Z)
-                      TableRow(
-                        decoration: BoxDecoration(color: Colors.blue[50]),
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: TextField(
-                              controller: _matrixControllers[0][0],
-                              enabled: false,
-                              textAlign: TextAlign.center,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                contentPadding:
-                                    EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                          for (int j = 1;
-                              j < _numVariables + _numRestricciones + 1;
-                              j++)
+                          ],
+                        ),
+                        // Fila de la función objetivo (Z)
+                        TableRow(
+                          decoration: BoxDecoration(color: Colors.blue[50]),
+                          children: [
                             Padding(
                               padding: const EdgeInsets.all(4.0),
                               child: TextField(
-                                controller: _matrixControllers[0][j],
+                                controller: _matrixControllers[0][0],
+                                enabled: false,
+                                textAlign: TextAlign.center,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  contentPadding:
+                                      EdgeInsets.symmetric(horizontal: 8),
+                                ),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            for (int j = 1;
+                                j < _numVariables + _numRestricciones + 1;
+                                j++)
+                              Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: TextField(
+                                  controller: _matrixControllers[0][j],
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  enabled: j > _numVariables
+                                      ? false
+                                      : true, // No editable si es holgura
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 8),
+                                  ),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            // LD (última columna)
+                            Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: TextField(
+                                controller: _matrixControllers[0]
+                                    [_numVariables + _numRestricciones + 1],
                                 keyboardType: TextInputType.number,
                                 textAlign: TextAlign.center,
                                 decoration: const InputDecoration(
@@ -261,54 +287,56 @@ class _SimplexScreenState extends State<SimplexScreen> {
                                 ),
                               ),
                             ),
-                          // LD (última columna)
-                          Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: TextField(
-                              controller: _matrixControllers[0]
-                                  [_numVariables + _numRestricciones + 1],
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                contentPadding:
-                                    EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Filas de restricciones
-                      for (int i = 1; i <= _numRestricciones; i++)
-                        TableRow(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: TextField(
-                                controller: _matrixControllers[i][0],
-                                enabled: false,
-                                textAlign: TextAlign.center,
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  contentPadding:
-                                      EdgeInsets.symmetric(horizontal: 8),
-                                ),
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                            for (int j = 1;
-                                j < _numVariables + _numRestricciones + 1;
-                                j++)
+                          ],
+                        ),
+                        // Filas de restricciones
+                        for (int i = 1; i <= _numRestricciones; i++)
+                          TableRow(
+                            children: [
                               Padding(
                                 padding: const EdgeInsets.all(4.0),
                                 child: TextField(
-                                  controller: _matrixControllers[i][j],
+                                  controller: _matrixControllers[i][0],
+                                  enabled: false,
+                                  textAlign: TextAlign.center,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 8),
+                                  ),
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                              for (int j = 1;
+                                  j < _numVariables + _numRestricciones + 1;
+                                  j++)
+                                Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: TextField(
+                                    controller: _matrixControllers[i][j],
+                                    keyboardType: TextInputType.number,
+                                    textAlign: TextAlign.center,
+                                    enabled: j > _numVariables
+                                        ? false
+                                        : true, // No editable si es columna de holgura
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      contentPadding:
+                                          EdgeInsets.symmetric(horizontal: 8),
+                                    ),
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              // LD (última columna)
+                              Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: TextField(
+                                  controller: _matrixControllers[i]
+                                      [_numVariables + _numRestricciones + 1],
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
                                   decoration: const InputDecoration(
@@ -321,27 +349,10 @@ class _SimplexScreenState extends State<SimplexScreen> {
                                   ),
                                 ),
                               ),
-                            // LD (última columna)
-                            Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: TextField(
-                                controller: _matrixControllers[i]
-                                    [_numVariables + _numRestricciones + 1],
-                                keyboardType: TextInputType.number,
-                                textAlign: TextAlign.center,
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  contentPadding:
-                                      EdgeInsets.symmetric(horizontal: 8),
-                                ),
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -349,7 +360,6 @@ class _SimplexScreenState extends State<SimplexScreen> {
                   style:
                       ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   onPressed: () {
-                    // Mostrar los valores actuales de la matriz
                     List<List<double>> matrix = [];
                     for (var row in _matrixControllers) {
                       List<double> rowValues = [];
@@ -358,13 +368,13 @@ class _SimplexScreenState extends State<SimplexScreen> {
                       }
                       matrix.add(rowValues);
                     }
-                    print(matrix);
 
+                    final resultado = SimplexSolver.resolver(matrix);
+                    setState(() {
+                      _resultadoSimplex = resultado;
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content:
-                            Text('Cálculo completado. Ver resultados abajo.'),
-                      ),
+                      SnackBar(content: Text(resultado['mensaje'])),
                     );
                   },
                   child: const Text('Calcular'),
@@ -378,7 +388,9 @@ class _SimplexScreenState extends State<SimplexScreen> {
                   padding: const EdgeInsets.all(12),
                   color: const Color(0xFFF2F2F2),
                   child: Text(
-                    'Solución Óptima: ${_generateSolutionPlaceholder()}',
+                    _resultadoSimplex['exito'] == true
+                        ? _formatearSolucion(_resultadoSimplex)
+                        : 'Solución Óptima: -',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -390,12 +402,22 @@ class _SimplexScreenState extends State<SimplexScreen> {
     );
   }
 
-  String _generateSolutionPlaceholder() {
-    String solution = '';
-    for (int i = 0; i < _numVariables; i++) {
-      solution += 'x${i + 1} = ${i == 0 ? '5' : '0'}   ';
+  String _formatearSolucion(Map<String, dynamic> resultado) {
+    final solucion = resultado['solucion'] as Map<String, double>;
+    final z = resultado['zOptimo'];
+    final numVars = _numVariables;
+    final numRes = _numRestricciones;
+    String texto = '';
+
+    // Variables originales
+    for (int i = 1; i <= numVars; i++) {
+      texto += 'x$i = ${solucion['x$i']?.toStringAsFixed(2) ?? "0.00"}   ';
     }
-    solution += 'Z = 15';
-    return solution;
+    // Variables de holgura
+    for (int i = 1; i <= numRes; i++) {
+      texto += 'S$i = ${solucion['S$i']?.toStringAsFixed(2) ?? "0.00"}   ';
+    }
+    texto += 'Z = ${z.toStringAsFixed(2)}';
+    return texto;
   }
 }
