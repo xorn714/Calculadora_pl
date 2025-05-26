@@ -1,33 +1,52 @@
 class SimplexSolver {
-  static Map<String, dynamic> resolver(List<List<double>> matriz) {
+  static Map<String, dynamic> resolver(List<List<double>> matriz, {bool esMaximizacion = true}) {
     try {
-      // Validar la matriz
-      if (matriz.isEmpty || matriz[0].length < 3) {
+      // Validación mejorada de la matriz
+      if (matriz.isEmpty || matriz[0].length < 3 || matriz.length < 2) {
         return {
           'exito': false,
-          'mensaje': 'Matriz no válida',
+          'mensaje': 'Matriz no válida. Debe tener al menos 1 variable y 1 restricción',
           'matrizFinal': [],
-          'iteraciones': []
+          'iteraciones': [],
+          'solucion': {}
         };
       }
 
+      // Verificar consistencia de dimensiones
+      int columnasEsperadas = matriz[0].length;
+      for (var fila in matriz) {
+        if (fila.length != columnasEsperadas) {
+          return {
+            'exito': false,
+            'mensaje': 'Todas las filas deben tener la misma cantidad de columnas',
+            'matrizFinal': [],
+            'iteraciones': [],
+            'solucion': {}
+          };
+        }
+      }
+
       List<Map<String, dynamic>> iteraciones = [];
-      List<List<double>> tabla = _convertirMatriz(matriz);
-      int numVariables = matriz[0].length - 2;
+      List<List<double>> tabla = _copiarMatriz(matriz);
+      int numVariables = matriz[0].length - matriz.length - 1;
       int numRestricciones = matriz.length - 1;
 
-      // Paso 1: Verificar si ya es solución óptima
-      while (!_esOptima(tabla[0])) {
-        // Guardar estado actual para las iteraciones
+      // Convertir minimización a maximización si es necesario
+      if (!esMaximizacion) {
+        for (int j = 1; j < tabla[0].length - 1; j++) {
+          tabla[0][j] *= -1;
+        }
+      }
+
+      // Algoritmo simplex
+      while (!_esOptima(tabla[0], esMaximizacion)) {
+        // Guardar iteración actual
         iteraciones.add({
-          'tabla': _copiarTabla(tabla),
-          'pivote': _encontrarPivote(tabla),
+          'tabla': _copiarMatriz(tabla),
+          'pivote': _encontrarPivote(tabla, esMaximizacion),
         });
 
-        // Paso 2: Encontrar columna pivote (variable entrante)
-        int colPivote = _encontrarColumnaPivote(tabla[0]);
-
-        // Paso 3: Encontrar fila pivote (variable saliente)
+        int colPivote = _encontrarColumnaPivote(tabla[0], esMaximizacion);
         int filaPivote = _encontrarFilaPivote(tabla, colPivote);
 
         if (filaPivote == -1) {
@@ -35,23 +54,21 @@ class SimplexSolver {
             'exito': false,
             'mensaje': 'Solución no acotada',
             'matrizFinal': tabla,
-            'iteraciones': iteraciones
+            'iteraciones': iteraciones,
+            'solucion': {}
           };
         }
 
-        // Paso 4: Realizar operaciones de fila para hacer el pivote 1 y otros en columna 0
         _realizarOperacionesPivote(tabla, filaPivote, colPivote);
       }
 
-      // Preparar solución
-      Map<String, double> solucion =
-          _extraerSolucion(tabla, numVariables, numRestricciones);
-      double zOptimo = tabla[0].last;
+      // Extraer solución
+      Map<String, double> solucion = _extraerSolucion(tabla, numVariables, numRestricciones);
+      double zOptimo = tabla[0].last * (esMaximizacion ? 1 : -1);
 
       return {
         'exito': true,
-        'mensaje':
-            'Solución óptima encontrada: Z = ${zOptimo.toStringAsFixed(2)}',
+        'mensaje': 'Solución óptima encontrada: Z = ${zOptimo.toStringAsFixed(2)}',
         'matrizFinal': tabla,
         'solucion': solucion,
         'zOptimo': zOptimo,
@@ -60,41 +77,35 @@ class SimplexSolver {
     } catch (e) {
       return {
         'exito': false,
-        'mensaje': 'Error durante el cálculo: $e',
+        'mensaje': 'Error durante el cálculo: ${e.toString()}',
         'matrizFinal': [],
-        'iteraciones': []
+        'iteraciones': [],
+        'solucion': {}
       };
     }
   }
 
-  static List<List<double>> _convertirMatriz(
-      List<List<double>> matrizOriginal) {
-    // Convertir la matriz de entrada al formato estándar para el algoritmo simplex
-    List<List<double>> nuevaMatriz = [];
-    for (var fila in matrizOriginal) {
-      nuevaMatriz.add(List.from(fila));
-    }
-    return nuevaMatriz;
+  static List<List<double>> _copiarMatriz(List<List<double>> original) {
+    return original.map((fila) => List<double>.from(fila)).toList();
   }
 
-  static bool _esOptima(List<double> filaZ) {
-    // Verificar si todos los coeficientes en la fila Z son no negativos (para maximización)
+  static bool _esOptima(List<double> filaZ, bool esMaximizacion) {
     for (int i = 1; i < filaZ.length - 1; i++) {
-      if (filaZ[i] < 0) {
+      if ((esMaximizacion && filaZ[i] < 0) || (!esMaximizacion && filaZ[i] > 0)) {
         return false;
       }
     }
     return true;
   }
 
-  static int _encontrarColumnaPivote(List<double> filaZ) {
-    // Encontrar el índice del valor más negativo en la fila Z (para maximización)
-    double minValor = 0;
+  static int _encontrarColumnaPivote(List<double> filaZ, bool esMaximizacion) {
     int indice = -1;
+    double valorExtremo = esMaximizacion ? double.negativeInfinity : double.infinity;
 
     for (int i = 1; i < filaZ.length - 1; i++) {
-      if (filaZ[i] < minValor) {
-        minValor = filaZ[i];
+      if ((esMaximizacion && filaZ[i] < 0 && filaZ[i] > valorExtremo) ||
+          (!esMaximizacion && filaZ[i] > 0 && filaZ[i] < valorExtremo)) {
+        valorExtremo = filaZ[i];
         indice = i;
       }
     }
@@ -119,17 +130,16 @@ class SimplexSolver {
     return filaPivote;
   }
 
-  static void _realizarOperacionesPivote(
-      List<List<double>> tabla, int filaPivote, int colPivote) {
-    // Hacer el elemento pivote igual a 1
+  static void _realizarOperacionesPivote(List<List<double>> tabla, int filaPivote, int colPivote) {
+    // Normalizar fila pivote
     double pivote = tabla[filaPivote][colPivote];
     for (int j = 0; j < tabla[filaPivote].length; j++) {
       tabla[filaPivote][j] /= pivote;
     }
 
-    // Hacer otros elementos en la columna pivote igual a 0
+    // Eliminar otros elementos en la columna pivote
     for (int i = 0; i < tabla.length; i++) {
-      if (i != filaPivote && tabla[i][colPivote] != 0) {
+      if (i != filaPivote) {
         double factor = tabla[i][colPivote];
         for (int j = 0; j < tabla[i].length; j++) {
           tabla[i][j] -= factor * tabla[filaPivote][j];
@@ -138,82 +148,36 @@ class SimplexSolver {
     }
   }
 
-  static Map<String, double> _extraerSolucion(
-      List<List<double>> tabla, int numVariables, int numRestricciones) {
+  static Map<String, double> _extraerSolucion(List<List<double>> tabla, int numVariables, int numRestricciones) {
     Map<String, double> solucion = {};
 
-    // Para cada variable de decisión
-    for (int j = 1; j <= numVariables; j++) {
-      bool esBasica = false;
-      int filaBasica = -1;
+    // Para cada columna (variables de decisión + holgura)
+    for (int j = 1; j <= numVariables + numRestricciones; j++) {
+      String nombreVar = j <= numVariables ? 'x$j' : 'S${j - numVariables}';
+      solucion[nombreVar] = 0.0;
 
-      // Verificar si es variable básica
       for (int i = 1; i < tabla.length; i++) {
-        if (tabla[i][j] == 1) {
-          // Verificar si es la única 1 en la columna
-          bool unicoUno = true;
+        if (tabla[i][j] == 1.0) {
+          bool esBasica = true;
           for (int k = 0; k < tabla.length; k++) {
-            if (k != i && tabla[k][j] != 0) {
-              unicoUno = false;
+            if (k != i && tabla[k][j] != 0.0) {
+              esBasica = false;
               break;
             }
           }
-
-          if (unicoUno) {
-            esBasica = true;
-            filaBasica = i;
+          if (esBasica) {
+            solucion[nombreVar] = tabla[i].last;
             break;
           }
         }
-      }
-
-      if (esBasica) {
-        solucion['x$j'] = tabla[filaBasica].last;
-      } else {
-        solucion['x$j'] = 0;
-      }
-    }
-    for (int j = 1; j <= numRestricciones; j++) {
-      bool esBasica = false;
-      int filaBasica = -1;
-
-      // Verificar si es variable básica
-      for (int i = 1; i < tabla.length; i++) {
-        if (tabla[i][j] == 1) {
-          // Verificar si es la única 1 en la columna
-          bool unicoUno = true;
-          for (int k = 0; k < tabla.length; k++) {
-            if (k != i && tabla[k][j] != 0) {
-              unicoUno = false;
-              break;
-            }
-          }
-
-          if (unicoUno) {
-            esBasica = true;
-            filaBasica = i;
-            break;
-          }
-        }
-      }
-
-      if (esBasica) {
-        solucion['S$j'] = tabla[filaBasica].last;
-      } else {
-        solucion['S$j'] = 0;
       }
     }
 
     return solucion;
   }
 
-  static List<List<double>> _copiarTabla(List<List<double>> tabla) {
-    return tabla.map((fila) => List<double>.from(fila)).toList();
-  }
-
-  // Devuelve la posición del pivote actual como un mapa {'fila': int, 'columna': int}
-  static Map<String, int> _encontrarPivote(List<List<double>> tabla) {
-    int colPivote = _encontrarColumnaPivote(tabla[0]);
+  static Map<String, int> _encontrarPivote(List<List<double>> tabla, bool esMaximizacion) {
+    int colPivote = _encontrarColumnaPivote(tabla[0], esMaximizacion);
     int filaPivote = _encontrarFilaPivote(tabla, colPivote);
     return {'fila': filaPivote, 'columna': colPivote};
   }

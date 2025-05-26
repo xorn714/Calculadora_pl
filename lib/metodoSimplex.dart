@@ -360,22 +360,44 @@ class _SimplexScreenState extends State<SimplexScreen> {
                   style:
                       ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   onPressed: () {
-                    List<List<double>> matrix = [];
-                    for (var row in _matrixControllers) {
-                      List<double> rowValues = [];
-                      for (var cell in row) {
-                        rowValues.add(double.tryParse(cell.text) ?? 0);
+                    try {
+                      List<List<double>> matrix = [];
+                      for (var row in _matrixControllers) {
+                        List<double> rowValues = [];
+                        for (var cell in row) {
+                          double value =
+                              double.tryParse(cell.text.replaceAll(',', '.')) ??
+                                  0;
+                          rowValues.add(value);
+                        }
+                        matrix.add(rowValues);
                       }
-                      matrix.add(rowValues);
-                    }
 
-                    final resultado = SimplexSolver.resolver(matrix);
-                    setState(() {
-                      _resultadoSimplex = resultado;
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(resultado['mensaje'])),
-                    );
+                      final resultado = SimplexSolver.resolver(
+                        matrix,
+                        esMaximizacion: _selectedOption == 'Maximizar',
+                      );
+
+                      setState(() {
+                        _resultadoSimplex = resultado;
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(resultado['mensaje']),
+                          backgroundColor: resultado['exito'] == true
+                              ? Colors.green
+                              : Colors.red,
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error: ${e.toString()}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   child: const Text('Calcular'),
                 ),
@@ -386,12 +408,46 @@ class _SimplexScreenState extends State<SimplexScreen> {
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  color: const Color(0xFFF2F2F2),
-                  child: Text(
-                    _resultadoSimplex['exito'] == true
-                        ? _formatearSolucion(_resultadoSimplex)
-                        : 'Solución Óptima: -',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F2F2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_resultadoSimplex['exito'] == true) ...[
+                        Text('Solución Óptima:',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[800],
+                                fontSize: 16)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 8,
+                          children: _resultadoSimplex['solucion'] is Map<String, double>
+                              ? _buildSolucionWidgets(_resultadoSimplex)
+                              : [const Text('-')],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                            'Valor Óptimo: Z = ${_resultadoSimplex['zOptimo'] is num ? (_resultadoSimplex['zOptimo'] as num).toStringAsFixed(2) : "-"}',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                      ] else if (_resultadoSimplex['mensaje'] != null) ...[
+                        Text('Resultado:',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[800],
+                                fontSize: 16)),
+                        const SizedBox(height: 8),
+                        Text(_resultadoSimplex['mensaje'],
+                            style: TextStyle(color: Colors.red[800])),
+                      ] else ...[
+                        const Text('Solución Óptima: -',
+                            style: TextStyle(fontStyle: FontStyle.italic)),
+                      ],
+                    ],
                   ),
                 ),
               ],
@@ -402,22 +458,20 @@ class _SimplexScreenState extends State<SimplexScreen> {
     );
   }
 
-  String _formatearSolucion(Map<String, dynamic> resultado) {
+  List<Widget> _buildSolucionWidgets(Map<String, dynamic> resultado) {
     final solucion = resultado['solucion'] as Map<String, double>;
-    final z = resultado['zOptimo'];
-    final numVars = _numVariables;
-    final numRes = _numRestricciones;
-    String texto = '';
+    List<Widget> widgets = [];
 
-    // Variables originales
-    for (int i = 1; i <= numVars; i++) {
-      texto += 'x$i = ${solucion['x$i']?.toStringAsFixed(2) ?? "0.00"}   ';
+    // Ordenar las variables para mostrarlas consistentemente
+    var keys = solucion.keys.toList()..sort((a, b) => a.compareTo(b));
+
+    for (var key in keys) {
+      widgets.add(
+        Text('$key = ${solucion[key]?.toStringAsFixed(2) ?? '0.00'}',
+            style: const TextStyle(fontSize: 14)),
+      );
     }
-    // Variables de holgura
-    for (int i = 1; i <= numRes; i++) {
-      texto += 'S$i = ${solucion['S$i']?.toStringAsFixed(2) ?? "0.00"}   ';
-    }
-    texto += 'Z = ${z.toStringAsFixed(2)}';
-    return texto;
+
+    return widgets;
   }
 }
