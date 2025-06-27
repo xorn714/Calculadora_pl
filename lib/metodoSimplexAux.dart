@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'simplexSolver.dart';
 
 class SimplexScreen extends StatefulWidget {
+  const SimplexScreen({super.key});
+
   @override
   _SimplexScreenState createState() => _SimplexScreenState();
 }

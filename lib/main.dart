@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'metodoGrafico.dart';
-import 'metodoSimplex.dart';
+import 'metodo_grafico.dart';
+import 'metodo_simplex.dart';
 
 void main() {
-  runApp(const LinearProgrammingApp());
+  runApp(const MyApp());
 }
 
-class LinearProgrammingApp extends StatelessWidget {
-  const LinearProgrammingApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
