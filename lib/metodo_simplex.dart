@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:calculadora_pl/solucion_simplex_screen.dart'; // Make sure this import path is correct based on your project structure
 
 class SimplexScreen extends StatefulWidget {
   const SimplexScreen({super.key});
@@ -89,6 +90,69 @@ class _SimplexScreenState extends State<SimplexScreen> {
     });
   }
 
+  // Function to parse input and navigate
+  void _generateSolution() {
+    List<double> objectiveFunctionCoefficients = [];
+    List<List<double>> constraintCoefficients = [];
+    List<double> rhsValues = [];
+
+    // Parse Objective Function Coefficients
+    for (var controller in _objectiveFunctionControllers) {
+      final value = double.tryParse(controller.text);
+      if (value == null) {
+        _showSnackBar('Por favor, ingrese valores numéricos válidos para la función objetivo.');
+        return;
+      }
+      objectiveFunctionCoefficients.add(value);
+    }
+
+    // Parse Constraint Coefficients
+    for (int i = 0; i < _numRestrictions; i++) {
+      List<double> rowCoefficients = [];
+      for (int j = 0; j < _numVariables; j++) {
+        final value = double.tryParse(_constraintControllers[i][j].text);
+        if (value == null) {
+          _showSnackBar('Por favor, ingrese valores numéricos válidos para las restricciones.');
+          return;
+        }
+        rowCoefficients.add(value);
+      }
+      constraintCoefficients.add(rowCoefficients);
+    }
+
+    // Parse RHS Values
+    for (var controller in _rhsControllers) {
+      final value = double.tryParse(controller.text);
+      if (value == null) {
+        _showSnackBar('Por favor, ingrese valores numéricos válidos para el lado derecho de las restricciones.');
+        return;
+      }
+      rhsValues.add(value);
+    }
+
+    // Navigate to the SolucionSimplexScreen with the parsed data
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SolucionSimplexScreen(
+          objectiveFunctionCoefficients: objectiveFunctionCoefficients,
+          constraintCoefficients: constraintCoefficients,
+          rhsValues: rhsValues,
+        ),
+      ),
+    );
+  }
+
+  // Helper function to show a SnackBar
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -158,36 +222,44 @@ class _SimplexScreenState extends State<SimplexScreen> {
 
                     // Section for Objective Function (Max Z)
                     if (_numVariables > 0) ...[
-                      const Text(
-                        'Maximizar Z:',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap( // Use Wrap to allow items to flow to the next line if needed
-                        spacing: 8.0, // Horizontal spacing
-                        runSpacing: 4.0, // Vertical spacing
-                        children: List.generate(_numVariables, (index) {
-                          return SizedBox(
-                            width: 70, // Adjust width as needed for inputs
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _objectiveFunctionControllers[index],
-                                    keyboardType: TextInputType.number,
-                                    style: const TextStyle(color: Colors.black), // Text color black for inputs
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                    ),
+                      Row( // Changed Column to Row for "Maximizar Z" section
+                        crossAxisAlignment: CrossAxisAlignment.center, // Align items vertically
+                        children: [
+                          const Text(
+                            'Maximizar Z:',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                          ),
+                          const SizedBox(width: 8), // Add some spacing between text and inputs
+                          Expanded( // Use Expanded to allow Wrap to take available space
+                            child: Wrap( // Use Wrap to allow items to flow to the next line if needed
+                              spacing: 8.0, // Horizontal spacing
+                              runSpacing: 4.0, // Vertical spacing
+                              children: List.generate(_numVariables, (index) {
+                                return SizedBox(
+                                  width: 70, // Adjust width as needed for inputs
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _objectiveFunctionControllers[index],
+                                          keyboardType: TextInputType.number,
+                                          style: const TextStyle(color: Colors.black), // Text color black for inputs
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                          ),
+                                        ),
+                                      ),
+                                      // Display X without subscript
+                                      Text(' X${index + 1}', style: const TextStyle(color: Colors.black)),
+                                    ],
                                   ),
-                                ),
-                                Text(' X${index + 1}', style: const TextStyle(color: Colors.black)),
-                              ],
+                                );
+                              }),
                             ),
-                          );
-                        }),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 32),
                     ],
@@ -228,6 +300,7 @@ class _SimplexScreenState extends State<SimplexScreen> {
                                                 ),
                                               ),
                                             ),
+                                            // Display X without subscript and plus sign
                                             Text(' X${j + 1} ${j < _numVariables - 1 ? '+' : ''}', style: const TextStyle(color: Colors.black)),
                                           ],
                                         ),
@@ -256,6 +329,13 @@ class _SimplexScreenState extends State<SimplexScreen> {
                         }),
                       ),
                     ],
+                    const SizedBox(height: 32),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _generateSolution, // Call the new _generateSolution function
+                        child: const Text('Generar'),
+                      ),
+                    ),
                   ],
                 ),
               ),
