@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:calculadora_pl/solucion_simplex_screen.dart'; // Make sure this import path is correct based on your project structure
+import 'package:calculadora_pl/metodo_simplex/solucion_simplex_screen.dart'; // Make sure this import path is correct based on your project structure
 
 class SimplexScreen extends StatefulWidget {
   const SimplexScreen({super.key});

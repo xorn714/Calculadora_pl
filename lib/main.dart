@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'metodo_grafico.dart';
-import 'metodo_simplex.dart';
+import 'metodo_grafico/metodo_grafico_screen.dart';
+import 'metodo_simplex/metodo_simplex_screen.dart';
 
 void main() {
   runApp(const MyApp());

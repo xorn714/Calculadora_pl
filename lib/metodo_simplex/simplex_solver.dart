@@ -1,5 +1,4 @@
 // lib/simplex_solver.dart
-import 'dart:math';
 
 /// Clase que implementa la lógica del método Simplex para problemas de programación lineal.
 class SimplexSolver {

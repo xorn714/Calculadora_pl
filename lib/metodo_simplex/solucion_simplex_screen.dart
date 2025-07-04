@@ -1,5 +1,5 @@
 // lib/solucion_simplex_screen.dart
-import 'package:calculadora_pl/simplex_solver.dart';
+import 'package:calculadora_pl/metodo_simplex/simplex_solver.dart';
 import 'package:flutter/material.dart';
 
 class SolucionSimplexScreen extends StatefulWidget {
