@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dos_fases_solver.dart';
+import 'solucion_dos_fases_screen.dart';
 
 class TwoPhaseScreen extends StatefulWidget {
   const TwoPhaseScreen({super.key});
@@ -134,7 +136,20 @@ class _TwoPhaseScreenState extends State<TwoPhaseScreen> {
     debugPrint("Operadores: $_constraintOperators");
     debugPrint("Lado derecho: $rhs");
 
-    _showSnackBar("Datos capturados correctamente (Método Dos Fases).");
+    final result = TwoPhaseMethod.solve(
+      objectiveCoefficients: objectiveCoefficients,
+      constraints: constraints,
+      rhs: rhs,
+      constraintOperators: _constraintOperators,
+      objectiveType: _objectiveType,
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SolucionDosFasesScreen(result: result),
+      ),
+    );
   }
 
   void _showSnackBar(String message) {
