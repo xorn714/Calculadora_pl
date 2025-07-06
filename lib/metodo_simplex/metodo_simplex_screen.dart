@@ -11,7 +11,8 @@ class SimplexScreen extends StatefulWidget {
 class _SimplexScreenState extends State<SimplexScreen> {
   // Controllers for the number of variables and restrictions
   final TextEditingController _numVariablesController = TextEditingController();
-  final TextEditingController _numRestrictionsController = TextEditingController();
+  final TextEditingController _numRestrictionsController =
+      TextEditingController();
 
   // State variables to hold the parsed number of variables and restrictions
   int _numVariables = 0;
@@ -22,7 +23,8 @@ class _SimplexScreenState extends State<SimplexScreen> {
   List<TextEditingController> _objectiveFunctionControllers = [];
   // Constraint coefficients (S.A.) and right-hand side values
   List<List<TextEditingController>> _constraintControllers = [];
-  List<TextEditingController> _rhsControllers = []; // Right-hand side values for constraints
+  List<TextEditingController> _rhsControllers =
+      []; // Right-hand side values for constraints
 
   @override
   void initState() {
@@ -100,7 +102,8 @@ class _SimplexScreenState extends State<SimplexScreen> {
     for (var controller in _objectiveFunctionControllers) {
       final value = double.tryParse(controller.text);
       if (value == null) {
-        _showSnackBar('Por favor, ingrese valores numéricos válidos para la función objetivo.');
+        _showSnackBar(
+            'Por favor, ingrese valores numéricos válidos para la función objetivo.');
         return;
       }
       objectiveFunctionCoefficients.add(value);
@@ -112,7 +115,8 @@ class _SimplexScreenState extends State<SimplexScreen> {
       for (int j = 0; j < _numVariables; j++) {
         final value = double.tryParse(_constraintControllers[i][j].text);
         if (value == null) {
-          _showSnackBar('Por favor, ingrese valores numéricos válidos para las restricciones.');
+          _showSnackBar(
+              'Por favor, ingrese valores numéricos válidos para las restricciones.');
           return;
         }
         rowCoefficients.add(value);
@@ -124,7 +128,8 @@ class _SimplexScreenState extends State<SimplexScreen> {
     for (var controller in _rhsControllers) {
       final value = double.tryParse(controller.text);
       if (value == null) {
-        _showSnackBar('Por favor, ingrese valores numéricos válidos para el lado derecho de las restricciones.');
+        _showSnackBar(
+            'Por favor, ingrese valores numéricos válidos para el lado derecho de las restricciones.');
         return;
       }
       rhsValues.add(value);
@@ -163,37 +168,44 @@ class _SimplexScreenState extends State<SimplexScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Center( // Center the container
-        child: Padding( // Add padding around the white container
+      body: Center(
+        // Center the container
+        child: Padding(
+          // Add padding around the white container
           padding: const EdgeInsets.all(16.0),
-          child: ConstrainedBox( // Constrain the size of the white container
-            constraints: const BoxConstraints(maxWidth: 600), // Max width for the container
+          child: ConstrainedBox(
+            // Constrain the size of the white container
+            constraints: const BoxConstraints(
+                maxWidth: 600), // Max width for the container
             child: Container(
               // Changed to BoxDecoration for rounded corners
               decoration: BoxDecoration(
                 color: Colors.white, // Set the background color to white
                 borderRadius: BorderRadius.circular(25.0), // Rounded corners
               ),
-              padding: const EdgeInsets.all(16.0), // Padding inside the white container
-              child: SingleChildScrollView( // Use SingleChildScrollView for scrollability
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Section for entering number of variables and restrictions
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: _numVariablesController,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: Colors.black), // Text color black
+                            style: const TextStyle(
+                                color: Colors.black), // Text color black
                             decoration: const InputDecoration(
                               labelText: 'Cantidad de Variables',
                               border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                              labelStyle: TextStyle(color: Colors.black), // Label color black
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                              labelStyle: TextStyle(
+                                  color: Colors.black), // Label color black
                             ),
-                            onSubmitted: (_) => _updateMatrixSize(), // Update on submission
+                            onSubmitted: (_) =>
+                                _updateMatrixSize(), // Update on submission
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -201,20 +213,30 @@ class _SimplexScreenState extends State<SimplexScreen> {
                           child: TextField(
                             controller: _numRestrictionsController,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: Colors.black), // Text color black
+                            style: const TextStyle(
+                                color: Colors.black), // Text color black
                             decoration: const InputDecoration(
                               labelText: 'Cantidad de Restricciones',
                               border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                              labelStyle: TextStyle(color: Colors.black), // Label color black
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                              labelStyle: TextStyle(
+                                  color: Colors.black), // Label color black
                             ),
-                            onSubmitted: (_) => _updateMatrixSize(), // Update on submission
+                            onSubmitted: (_) =>
+                                _updateMatrixSize(), // Update on submission
                           ),
                         ),
                         const SizedBox(width: 16),
                         ElevatedButton(
                           onPressed: _updateMatrixSize,
-                          child: const Text('Confirmar'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                          ),
+                          child: const Text(
+                            'Generar',
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
                         ),
                       ],
                     ),
@@ -222,39 +244,50 @@ class _SimplexScreenState extends State<SimplexScreen> {
 
                     // Section for Objective Function (Max Z)
                     if (_numVariables > 0) ...[
-                      Row( // Changed Column to Row for "Maximizar Z" section
-                        crossAxisAlignment: CrossAxisAlignment.center, // Align items vertically
+                      Row(
+                        // Changed Column to Row for "Maximizar Z" section
+                        crossAxisAlignment:
+                            CrossAxisAlignment.center, // Align items vertically
                         children: [
                           const Text(
-                            'Maximizar Z:',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                            'Maximizar Z =',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
                           ),
-                          const SizedBox(width: 8), // Add some spacing between text and inputs
-                          Expanded( // Use Expanded to allow Wrap to take available space
-                            child: Wrap( // Use Wrap to allow items to flow to the next line if needed
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Wrap(
                               spacing: 8.0, // Horizontal spacing
                               runSpacing: 4.0, // Vertical spacing
                               children: List.generate(_numVariables, (index) {
-                                return SizedBox(
-                                  width: 70, // Adjust width as needed for inputs
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          controller: _objectiveFunctionControllers[index],
-                                          keyboardType: TextInputType.number,
-                                          style: const TextStyle(color: Colors.black), // Text color black for inputs
-                                          decoration: const InputDecoration(
-                                            border: OutlineInputBorder(),
-                                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                          ),
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: 60,
+                                      child: TextField(
+                                        controller:
+                                            _objectiveFunctionControllers[
+                                                index],
+                                        keyboardType: TextInputType.number,
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 8),
                                         ),
                                       ),
-                                      // Display X without subscript
-                                      Text(' X${index + 1}', style: const TextStyle(color: Colors.black)),
-                                    ],
-                                  ),
+                                    ),
+                                    Text(
+                                      ' X${index + 1}${index < _numVariables - 1 ? ' +' : ''}',
+                                      style:
+                                          const TextStyle(color: Colors.black),
+                                    ),
+                                  ],
                                 );
                               }),
                             ),
@@ -268,7 +301,10 @@ class _SimplexScreenState extends State<SimplexScreen> {
                     if (_numRestrictions > 0) ...[
                       const Text(
                         'S.A.',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
                       ),
                       const SizedBox(height: 8),
                       Column(
@@ -291,17 +327,29 @@ class _SimplexScreenState extends State<SimplexScreen> {
                                           children: [
                                             Expanded(
                                               child: TextField(
-                                                controller: _constraintControllers[i][j],
-                                                keyboardType: TextInputType.number,
-                                                style: const TextStyle(color: Colors.black), // Text color black for inputs
-                                                decoration: const InputDecoration(
+                                                controller:
+                                                    _constraintControllers[i]
+                                                        [j],
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                style: const TextStyle(
+                                                    color: Colors
+                                                        .black), // Text color black for inputs
+                                                decoration:
+                                                    const InputDecoration(
                                                   border: OutlineInputBorder(),
-                                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                  contentPadding:
+                                                      EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 8),
                                                 ),
                                               ),
                                             ),
                                             // Display X without subscript and plus sign
-                                            Text(' X${j + 1} ${j < _numVariables - 1 ? '+' : ''}', style: const TextStyle(color: Colors.black)),
+                                            Text(
+                                                ' X${j + 1} ${j < _numVariables - 1 ? '+' : ''}',
+                                                style: const TextStyle(
+                                                    color: Colors.black)),
                                           ],
                                         ),
                                       );
@@ -309,17 +357,23 @@ class _SimplexScreenState extends State<SimplexScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 4), // Reduced spacing
-                                const Text('≤', style: TextStyle(color: Colors.black)), // Inequality sign
+                                const Text('≤',
+                                    style: TextStyle(
+                                        color:
+                                            Colors.black)), // Inequality sign
                                 const SizedBox(width: 4), // Reduced spacing
                                 SizedBox(
                                   width: 80, // Width for the RHS input
                                   child: TextField(
                                     controller: _rhsControllers[i],
                                     keyboardType: TextInputType.number,
-                                    style: const TextStyle(color: Colors.black), // Text color black for inputs
+                                    style: const TextStyle(
+                                        color: Colors
+                                            .black), // Text color black for inputs
                                     decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 8),
                                     ),
                                   ),
                                 ),
@@ -329,11 +383,30 @@ class _SimplexScreenState extends State<SimplexScreen> {
                         }),
                       ),
                     ],
+                    // Display X1, X2, ..., Xn ≥ 0
+                    if (_numVariables > 0) ...[
+                      Text(
+                        '${List.generate(_numVariables, (i) => 'X${i + 1}').join(', ')} ≥ 0',
+                        style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ],
                     const SizedBox(height: 32),
                     Center(
                       child: ElevatedButton(
-                        onPressed: _generateSolution, // Call the new _generateSolution function
-                        child: const Text('Generar'),
+                        onPressed:
+                            _generateSolution, // Call the new _generateSolution function
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 16),
+                          backgroundColor: Colors.blue,
+                        ),
+                        child: const Text(
+                          'CALCULAR',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
                       ),
                     ),
                   ],

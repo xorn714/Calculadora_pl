@@ -123,7 +123,7 @@ class _SolucionSimplexScreenState extends State<SolucionSimplexScreen> {
                         int index = entry.key;
                         double coeff = entry.value;
                         String sign = coeff >= 0 ? (index == 0 ? '' : ' + ') : ' - ';
-                        return '${sign}${coeff.abs()}X${index + 1}';
+                        return '$sign${coeff.abs()}X${index + 1}';
                       }).join()}',
                       style: const TextStyle(fontSize: 16, color: Colors.black),
                     ),
@@ -156,7 +156,7 @@ class _SolucionSimplexScreenState extends State<SolucionSimplexScreen> {
                                         double coeff = entry.value;
                                         String sign =
                                             coeff >= 0 ? (index == 0 ? '' : ' + ') : ' - ';
-                                        return '${sign}${coeff.abs()}X${index + 1}';
+                                        return '$sign${coeff.abs()}X${index + 1}';
                                       }).join(),
                                   style:
                                       const TextStyle(fontSize: 16, color: Colors.black),
@@ -254,7 +254,7 @@ class _SolucionSimplexScreenState extends State<SolucionSimplexScreen> {
                                           color: Colors.black),
                                     ),
                                   );
-                                }).toList(),
+                                }),
                               ],
                             );
                           }).toList(),
