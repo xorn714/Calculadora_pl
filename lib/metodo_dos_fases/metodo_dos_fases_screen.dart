@@ -10,26 +10,23 @@ class TwoPhaseScreen extends StatefulWidget {
 }
 
 class _TwoPhaseScreenState extends State<TwoPhaseScreen> {
-  final TextEditingController _numVariablesController = TextEditingController();
+  final TextEditingController _numVariablesController =
+      TextEditingController(text: '2');
   final TextEditingController _numRestrictionsController =
-      TextEditingController();
+      TextEditingController(text: '2');
 
-  int _numVariables = 0;
-  int _numRestrictions = 0;
-
-  String _objectiveType = 'Maximizar'; // Nuevo
-
+  String _objectiveType = 'Maximizar';
   List<TextEditingController> _objectiveFunctionControllers = [];
   List<List<TextEditingController>> _constraintControllers = [];
   List<TextEditingController> _rhsControllers = [];
-  List<String> _constraintOperators = []; // Nuevo
+  List<String> _constraintOperators = [];
 
   @override
   void initState() {
     super.initState();
-    _numVariablesController.text = '2';
-    _numRestrictionsController.text = '2';
     _updateMatrixSize();
+    _numVariablesController.addListener(_updateMatrixSize);
+    _numRestrictionsController.addListener(_updateMatrixSize);
   }
 
   @override
@@ -55,86 +52,75 @@ class _TwoPhaseScreenState extends State<TwoPhaseScreen> {
     _objectiveFunctionControllers.clear();
     _constraintControllers.clear();
     _rhsControllers.clear();
-    _constraintOperators.clear(); // Nuevo
+    _constraintOperators.clear();
   }
 
   void _updateMatrixSize() {
     setState(() {
       _disposeDynamicControllers();
 
-      _numVariables = int.tryParse(_numVariablesController.text) ?? 0;
-      _numRestrictions = int.tryParse(_numRestrictionsController.text) ?? 0;
+      final numVariables = int.tryParse(_numVariablesController.text) ?? 2;
+      final numRestrictions =
+          int.tryParse(_numRestrictionsController.text) ?? 2;
 
       _objectiveFunctionControllers = List.generate(
-        _numVariables,
+        numVariables,
         (index) => TextEditingController(),
       );
 
       _constraintControllers = List.generate(
-        _numRestrictions,
+        numRestrictions,
         (_) => List.generate(
-          _numVariables,
+          numVariables,
           (_) => TextEditingController(),
         ),
       );
 
       _rhsControllers = List.generate(
-        _numRestrictions,
+        numRestrictions,
         (_) => TextEditingController(),
       );
 
       _constraintOperators = List.generate(
-        _numRestrictions,
+        numRestrictions,
         (_) => '≤',
       );
     });
   }
 
   void _generateSolution() {
-    List<double> objectiveCoefficients = [];
-    List<List<double>> constraints = [];
-    List<double> rhs = [];
-
+    // Validar campos
     for (var c in _objectiveFunctionControllers) {
-      final value = double.tryParse(c.text);
-      if (value == null) {
-        _showSnackBar(
-            "Ingrese valores numéricos válidos para la función objetivo.");
+      if (c.text.isEmpty) {
+        _showSnackBar("Ingrese todos los coeficientes de la función objetivo");
         return;
       }
-      objectiveCoefficients.add(value);
     }
 
-    for (int i = 0; i < _numRestrictions; i++) {
-      List<double> row = [];
-      for (int j = 0; j < _numVariables; j++) {
-        final value = double.tryParse(_constraintControllers[i][j].text);
-        if (value == null) {
-          _showSnackBar(
-              "Ingrese valores numéricos válidos en las restricciones.");
+    for (int i = 0; i < _constraintControllers.length; i++) {
+      for (int j = 0; j < _constraintControllers[i].length; j++) {
+        if (_constraintControllers[i][j].text.isEmpty) {
+          _showSnackBar("Ingrese todos los coeficientes de las restricciones");
           return;
         }
-        row.add(value);
       }
-      constraints.add(row);
-    }
-
-    for (var c in _rhsControllers) {
-      final value = double.tryParse(c.text);
-      if (value == null) {
-        _showSnackBar(
-            "Ingrese valores numéricos válidos para el lado derecho.");
+      if (_rhsControllers[i].text.isEmpty) {
+        _showSnackBar("Ingrese todos los términos independientes");
         return;
       }
-      rhs.add(value);
     }
 
-    // Para depuración
-    debugPrint("Tipo de función objetivo: $_objectiveType");
-    debugPrint("Función Objetivo: $objectiveCoefficients");
-    debugPrint("Restricciones: $constraints");
-    debugPrint("Operadores: $_constraintOperators");
-    debugPrint("Lado derecho: $rhs");
+    // Convertir a valores numéricos
+    List<double> objectiveCoefficients = _objectiveFunctionControllers
+        .map((c) => double.tryParse(c.text) ?? 0)
+        .toList();
+
+    List<List<double>> constraints = _constraintControllers
+        .map((row) => row.map((c) => double.tryParse(c.text) ?? 0).toList())
+        .toList();
+
+    List<double> rhs =
+        _rhsControllers.map((c) => double.tryParse(c.text) ?? 0).toList();
 
     final result = TwoPhaseMethod.solve(
       objectiveCoefficients: objectiveCoefficients,
@@ -179,165 +165,236 @@ class _TwoPhaseScreenState extends State<TwoPhaseScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(25.0),
+                borderRadius: BorderRadius.circular(12.0),
               ),
               padding: const EdgeInsets.all(16.0),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Configuración inicial
+                    const Text(
+                      'Configuración del problema:',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black),
+                    ),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: _numVariablesController,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(color: Colors.black),
-                            decoration: const InputDecoration(
-                              labelText: 'Cantidad de Variables',
-                              border: OutlineInputBorder(),
-                              labelStyle: TextStyle(color: Colors.black),
-                            ),
-                            onSubmitted: (_) => _updateMatrixSize(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Número de variables:',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              const SizedBox(height: 4),
+                              TextField(
+                                controller: _numVariablesController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(color: Colors.black),
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: TextField(
-                            controller: _numRestrictionsController,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(color: Colors.black),
-                            decoration: const InputDecoration(
-                              labelText: 'Cantidad de Restricciones',
-                              border: OutlineInputBorder(),
-                              labelStyle: TextStyle(color: Colors.black),
-                            ),
-                            onSubmitted: (_) => _updateMatrixSize(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Número de restricciones:',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              const SizedBox(height: 4),
+                              TextField(
+                                controller: _numRestrictionsController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(color: Colors.black),
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Función objetivo
+                    const Text(
+                      'Función objetivo:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: DropdownButton<String>(
+                            value: _objectiveType,
+                            style: const TextStyle(
+                                fontSize: 18, color: Colors.black),
+                            dropdownColor: Colors.white,
+                            underline: const SizedBox(),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'Maximizar',
+                                child: Text('Maximizar',
+                                    style: TextStyle(
+                                        fontSize: 18, color: Colors.black)),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Minimizar',
+                                child: Text('Minimizar',
+                                    style: TextStyle(
+                                        fontSize: 18, color: Colors.black)),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _objectiveType = value;
+                                });
+                              }
+                            },
                           ),
                         ),
                         const SizedBox(width: 16),
-                        ElevatedButton(
-                          onPressed: _updateMatrixSize,
-                          child: const Text("Confirmar"),
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    if (_numVariables > 0) ...[
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 160,
-                            child: DropdownButtonFormField<String>(
-                              value: _objectiveType,
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(25),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                              ),
-                              dropdownColor: Colors.white,
-                              style: const TextStyle(
-                                  color: Colors
-                                      .black), // <-- texto negro cuando está cerrado
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'Maximizar',
-                                  child: Text('Maximizar',
-                                      style: TextStyle(color: Colors.black)),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'Minimizar',
-                                  child: Text('Minimizar',
-                                      style: TextStyle(color: Colors.black)),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    _objectiveType = value;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            "Z:",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Wrap(
-                              spacing: 8.0,
-                              runSpacing: 4.0,
-                              children: List.generate(_numVariables, (index) {
-                                return SizedBox(
-                                  width: 70,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          controller:
-                                              _objectiveFunctionControllers[
-                                                  index],
-                                          keyboardType: TextInputType.number,
-                                          style: const TextStyle(
-                                              color: Colors.black),
-                                          decoration: const InputDecoration(
-                                            border: OutlineInputBorder(),
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                    horizontal: 8, vertical: 8),
+                        const Text(
+                          'Z =',
+                          style: TextStyle(fontSize: 18, color: Colors.black),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Wrap(
+                            spacing: 4.0, // Espacio horizontal reducido
+                            runSpacing: 8.0, // Espacio vertical reducido
+                            children: List.generate(
+                                _objectiveFunctionControllers.length, (index) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal:
+                                        4.0), // Padding horizontal reducido
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (index > 0)
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 2.0),
+                                        child: Text(
+                                          "+",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            color: Colors.black,
                                           ),
                                         ),
                                       ),
-                                      Text(" X${index + 1}",
-                                          style: const TextStyle(
-                                              color: Colors.black)),
-                                    ],
-                                  ),
-                                );
-                              }),
-                            ),
-                          )
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-                    ],
-                    if (_numRestrictions > 0) ...[
-                      const Text(
-                        "S.A.",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                                    SizedBox(
+                                      width: 80,
+                                      child: TextField(
+                                        controller:
+                                            _objectiveFunctionControllers[
+                                                index],
+                                        keyboardType: TextInputType.number,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                        width: 4.0), // Espacio reducido
+                                    Text(
+                                      "X${index + 1}",
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Restricciones
+                    const Text(
+                      'Restricciones:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
-                      const SizedBox(height: 8),
-                      Column(
-                        children: List.generate(_numRestrictions, (i) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Wrap(
-                                    spacing: 8.0,
-                                    runSpacing: 4.0,
-                                    children: List.generate(_numVariables, (j) {
-                                      return SizedBox(
-                                        width: 70,
+                    ),
+                    const SizedBox(height: 8),
+                    Column(
+                      children:
+                          List.generate(_constraintControllers.length, (i) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 20.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Wrap(
+                                  spacing: 4.0, // Espacio horizontal reducido
+                                  runSpacing: 8.0, // Espacio vertical reducido
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    // Variables
+                                    ...List.generate(
+                                        _constraintControllers[i].length, (j) {
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal:
+                                                4.0), // Padding horizontal reducido
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Expanded(
+                                            if (j > 0)
+                                              const Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 2.0),
+                                                child: Text(
+                                                  "+",
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            SizedBox(
+                                              width: 80,
                                               child: TextField(
                                                 controller:
                                                     _constraintControllers[i]
@@ -345,86 +402,131 @@ class _TwoPhaseScreenState extends State<TwoPhaseScreen> {
                                                 keyboardType:
                                                     TextInputType.number,
                                                 style: const TextStyle(
-                                                    color: Colors.black),
+                                                  fontSize: 16,
+                                                  color: Colors.black,
+                                                ),
+                                                textAlign: TextAlign.center,
                                                 decoration:
                                                     const InputDecoration(
                                                   border: OutlineInputBorder(),
                                                   contentPadding:
                                                       EdgeInsets.symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 8),
+                                                    horizontal: 12,
+                                                    vertical: 12,
+                                                  ),
                                                 ),
                                               ),
                                             ),
+                                            const SizedBox(
+                                                width: 4.0), // Espacio reducido
                                             Text(
-                                                " X${j + 1} ${j < _numVariables - 1 ? '+' : ''}",
-                                                style: const TextStyle(
-                                                    color: Colors.black)),
+                                              "X${j + 1}",
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                color: Colors.black,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       );
                                     }),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                DropdownButton<String>(
-                                  value: _constraintOperators[i],
-                                  dropdownColor: Colors.white,
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: '≤',
-                                      child: Text('≤',
-                                          style:
-                                              TextStyle(color: Colors.black)),
+
+                                    // Operador de desigualdad
+                                    Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal:
+                                              4.0), // Margen horizontal reducido
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border.all(color: Colors.grey),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
+                                      child: DropdownButton<String>(
+                                        value: _constraintOperators[i],
+                                        style: const TextStyle(
+                                            fontSize: 18, color: Colors.black),
+                                        dropdownColor: Colors.white,
+                                        underline: const SizedBox(),
+                                        items: const [
+                                          DropdownMenuItem(
+                                            value: '≤',
+                                            child: Text('≤',
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    color: Colors.black)),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: '≥',
+                                            child: Text('≥',
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    color: Colors.black)),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: '=',
+                                            child: Text('=',
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    color: Colors.black)),
+                                          ),
+                                        ],
+                                        onChanged: (value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              _constraintOperators[i] = value;
+                                            });
+                                          }
+                                        },
+                                      ),
                                     ),
-                                    DropdownMenuItem(
-                                      value: '≥',
-                                      child: Text('≥',
-                                          style:
-                                              TextStyle(color: Colors.black)),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: '=',
-                                      child: Text('=',
-                                          style:
-                                              TextStyle(color: Colors.black)),
+                                    const SizedBox(
+                                        width: 4.0), // Espacio reducido
+                                    SizedBox(
+                                      width: 80,
+                                      child: TextField(
+                                        controller: _rhsControllers[i],
+                                        keyboardType: TextInputType.number,
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
                                     ),
                                   ],
-                                  onChanged: (value) {
-                                    if (value != null) {
-                                      setState(() {
-                                        _constraintOperators[i] = value;
-                                      });
-                                    }
-                                  },
                                 ),
-                                const SizedBox(width: 4),
-                                SizedBox(
-                                  width: 80,
-                                  child: TextField(
-                                    controller: _rhsControllers[i],
-                                    keyboardType: TextInputType.number,
-                                    style: const TextStyle(color: Colors.black),
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 8),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          );
-                        }),
-                      )
-                    ],
-                    const SizedBox(height: 32),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
+                    const Text(
+                      'X1, X2 ≥ 0',
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Botón de calcular
                     Center(
                       child: ElevatedButton(
                         onPressed: _generateSolution,
-                        child: const Text("Generar"),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 16),
+                          backgroundColor: Colors.blue,
+                        ),
+                        child: const Text(
+                          'CALCULAR',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
