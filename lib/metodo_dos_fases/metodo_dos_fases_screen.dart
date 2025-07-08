@@ -89,53 +89,38 @@ class _TwoPhaseScreenState extends State<TwoPhaseScreen> {
   }
 
   void _generateSolution() {
-    // Validar campos
-    for (var c in _objectiveFunctionControllers) {
-      if (c.text.isEmpty) {
-        _showSnackBar("Ingrese todos los coeficientes de la función objetivo");
-        return;
-      }
+    try {
+      // Validar que todos los campos tengan valores numéricos válidos
+      List<double> objectiveCoefficients = _objectiveFunctionControllers
+          .map((c) => double.parse(c.text))
+          .toList();
+
+      List<List<double>> constraints = _constraintControllers
+          .map((row) => row.map((c) => double.parse(c.text)).toList())
+          .toList();
+
+      List<double> rhs =
+          _rhsControllers.map((c) => double.parse(c.text)).toList();
+
+      final result = TwoPhaseMethod.solve(
+        objectiveCoefficients: objectiveCoefficients,
+        constraints: constraints,
+        rhs: rhs,
+        constraintOperators: _constraintOperators,
+        objectiveType: _objectiveType,
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SolucionDosFasesScreen(result: result),
+        ),
+      );
+    } catch (e) {
+      _showSnackBar(
+          "Error: Ingrese valores numéricos válidos en todos los campos");
+      return;
     }
-
-    for (int i = 0; i < _constraintControllers.length; i++) {
-      for (int j = 0; j < _constraintControllers[i].length; j++) {
-        if (_constraintControllers[i][j].text.isEmpty) {
-          _showSnackBar("Ingrese todos los coeficientes de las restricciones");
-          return;
-        }
-      }
-      if (_rhsControllers[i].text.isEmpty) {
-        _showSnackBar("Ingrese todos los términos independientes");
-        return;
-      }
-    }
-
-    // Convertir a valores numéricos
-    List<double> objectiveCoefficients = _objectiveFunctionControllers
-        .map((c) => double.tryParse(c.text) ?? 0)
-        .toList();
-
-    List<List<double>> constraints = _constraintControllers
-        .map((row) => row.map((c) => double.tryParse(c.text) ?? 0).toList())
-        .toList();
-
-    List<double> rhs =
-        _rhsControllers.map((c) => double.tryParse(c.text) ?? 0).toList();
-
-    final result = TwoPhaseMethod.solve(
-      objectiveCoefficients: objectiveCoefficients,
-      constraints: constraints,
-      rhs: rhs,
-      constraintOperators: _constraintOperators,
-      objectiveType: _objectiveType,
-    );
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SolucionDosFasesScreen(result: result),
-      ),
-    );
   }
 
   void _showSnackBar(String message) {
@@ -503,13 +488,16 @@ class _TwoPhaseScreenState extends State<TwoPhaseScreen> {
                         );
                       }),
                     ),
-                    const Text(
-                      'X1, X2 ≥ 0',
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold),
+                    // Restricciones de no negatividad (texto dinámico)
+                    Text(
+                      '${List.generate(int.tryParse(_numVariablesController.text) ?? 2, (index) => 'X${index + 1}').join(', ')} ≥ 0',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+
                     const SizedBox(height: 24),
 
                     // Botón de calcular
