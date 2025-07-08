@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'metodo_grafico/metodo_grafico_screen.dart';
 import 'metodo_simplex/metodo_simplex_screen.dart';
+import 'metodo_dos_fases/metodo_dos_fases_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -91,6 +92,27 @@ class MainMenu extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const GraphicMethodScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                icon: const Icon(
+                    Icons.functions), // otro ícono para diferenciarlo
+                label: const Text('Método Dos Fases'),
+                style: ElevatedButton.styleFrom(  
+                  minimumSize: const Size(250, 60),
+                  backgroundColor: const Color(0xFF6D597A),
+                  textStyle: const TextStyle(fontSize: 18),
+                  shadowColor: Colors.black45,
+                  elevation: 6,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TwoPhaseScreen(),
                     ),
                   );
                 },
