@@ -335,12 +335,12 @@ class TwoPhaseMethod {
     List<String> lines = [];
     
     // Primero añadimos la fila Z (última fila)
-    String zLine = "Z | " + tableau.last.map((val) => val.toStringAsFixed(2)).join(" | ");
+    String zLine = "Z | ${tableau.last.map((val) => val.toStringAsFixed(2)).join(" | ")}";
     lines.add(zLine);
     
     // Luego añadimos las demás filas (restricciones)
     for (int i = 0; i < tableau.length - 1; i++) {
-      String line = "${i + 1} | " + tableau[i].map((val) => val.toStringAsFixed(2)).join(" | ");
+      String line = "${i + 1} | ${tableau[i].map((val) => val.toStringAsFixed(2)).join(" | ")}";
       lines.add(line);
     }
     

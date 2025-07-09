@@ -182,7 +182,7 @@ class SolucionDosFasesScreen extends StatelessWidget {
                     color: Colors.black
                   )
                 ),
-              )).toList(),
+              )),
             ],
             rows: rows.map((row) {
               return DataRow(
@@ -202,7 +202,7 @@ class SolucionDosFasesScreen extends StatelessWidget {
                       fontWeight: row[0] == "Z" ? FontWeight.bold : FontWeight.normal,
                       color: Colors.black
                     ),
-                  ))).toList(),
+                  ))),
                 ],
               );
             }).toList(),
