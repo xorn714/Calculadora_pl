@@ -230,12 +230,12 @@ class TwoPhaseMethod {
     } on Exception catch (e) {
       message = "Error: ${e.toString()}";
       steps.add(message);
-      rethrow; // Propaga la excepción para que el test la detecte
+      rethrow;
     } catch (e, stackTrace) {
       message = "Error durante el cálculo: ${e.toString()}";
       steps.add(message);
       steps.add("Stack trace: $stackTrace");
-      throw Exception(message); // Convierte cualquier error en una Exception
+      throw Exception(message);
     }
 
     return TwoPhaseResult(
@@ -333,11 +333,17 @@ class TwoPhaseMethod {
 
   static List<String> _formatTableau(List<List<double>> tableau) {
     List<String> lines = [];
-    for (int i = 0; i < tableau.length; i++) {
-      String line = i == tableau.length - 1 ? "Z | " : "${i + 1} | ";
-      line += tableau[i].map((val) => val.toStringAsFixed(2)).join(" | ");
+    
+    // Primero añadimos la fila Z (última fila)
+    String zLine = "Z | " + tableau.last.map((val) => val.toStringAsFixed(2)).join(" | ");
+    lines.add(zLine);
+    
+    // Luego añadimos las demás filas (restricciones)
+    for (int i = 0; i < tableau.length - 1; i++) {
+      String line = "${i + 1} | " + tableau[i].map((val) => val.toStringAsFixed(2)).join(" | ");
       lines.add(line);
     }
+    
     return lines;
   }
 }
