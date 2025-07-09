@@ -133,6 +133,6 @@ class SimplexSolver {
     }
 
     // El valor óptimo de Z está en la primera fila, última columna, con signo negado
-    _optimalZValue = -_simplexTableau[0][numVariables + numRestrictions];
+    _optimalZValue = _simplexTableau[0][numVariables + numRestrictions];
   }
 }

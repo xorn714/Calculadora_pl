@@ -137,12 +137,10 @@ class TwoPhaseMethod {
       List<int> basicVars = [];
       for (int j = 0; j < totalCols; j++) {
         int countOnes = 0;
-        int rowWithOne = -1;
         for (int i = 0; i < numConstraints; i++) {
           if (phase1Table[i][j].abs() > 1e-6) {
             if ((phase1Table[i][j] - 1.0).abs() < 1e-6) {
               countOnes++;
-              rowWithOne = i;
             } else {
               countOnes = 0;
               break;
