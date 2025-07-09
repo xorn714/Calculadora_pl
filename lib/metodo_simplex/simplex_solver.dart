@@ -8,7 +8,7 @@ class SimplexSolver {
 
   List<double>? _optimalSolution;
   double? _optimalZValue;
-  // Initialize _simplexTableau directly here to guarantee it's never null.
+  // Inicializa _simplexTableau directamente aquí para garantizar que nunca sea nulo.
   List<List<double>> _simplexTableau = [];
 
   SimplexSolver({
@@ -20,38 +20,37 @@ class SimplexSolver {
   List<double>? get optimalSolution => _optimalSolution;
   double? get optimalZValue => _optimalZValue;
 
-  /// Returns the final simplex tableau.
-  /// This getter now guarantees a non-null List<List<double>>.
+  /// Devuelve el tableau final del método simplex.
   List<List<double>> getSimplexTableau() => _simplexTableau;
 
   void solve() {
     int numVariables = objectiveFunctionCoefficients.length;
     int numRestrictions = constraintCoefficients.length;
 
-    // Re-initialize _simplexTableau with the correct dimensions.
-    // This creates a new list of lists, ensuring no null inner lists.
+    // Reinicializa _simplexTableau con las dimensiones correctas.
+    // Esto crea una nueva lista de listas, asegurando que no haya listas internas nulas.
     _simplexTableau = List.generate(
       numRestrictions + 1,
       (i) => List.filled(numVariables + numRestrictions + 1, 0.0),
     );
 
-    // Fill the objective function row (first row of the tableau).
-    // Accessing _simplexTableau elements without '!' as it's guaranteed non-null.
+    // Llena la fila de la función objetivo (primera fila del tableau).
+    // Se accede a los elementos de _simplexTableau sin '!' ya que está garantizado que no es nulo.
     for (int j = 0; j < numVariables; j++) {
       _simplexTableau[0][j] = -objectiveFunctionCoefficients[j];
     }
-    _simplexTableau[0][numVariables + numRestrictions] = 0.0; // Z value, initially 0
+    _simplexTableau[0][numVariables + numRestrictions] = 0.0; // Valor de Z, inicialmente 0
 
-    // Fill the constraint rows.
+    // Llena las filas de restricciones.
     for (int i = 0; i < numRestrictions; i++) {
       for (int j = 0; j < numVariables; j++) {
         _simplexTableau[i + 1][j] = constraintCoefficients[i][j];
       }
-      _simplexTableau[i + 1][numVariables + i] = 1.0; // Slack variable coefficient
+      _simplexTableau[i + 1][numVariables + i] = 1.0; // Coeficiente de variable de holgura
       _simplexTableau[i + 1][numVariables + numRestrictions] = rhsValues[i];
     }
 
-    // --- Simplex Iteration ---
+    // --- Iteración del método Simplex ---
     bool canImprove = true;
     while (canImprove) {
       int pivotColumn = -1;
@@ -72,7 +71,7 @@ class SimplexSolver {
       double minRatio = double.infinity;
 
       for (int i = 1; i < numRestrictions + 1; i++) {
-        // Only consider positive values in the pivot column to avoid division by zero or negative ratios
+        // Solo considerar valores positivos en la columna pivote para evitar división por cero o razones negativas
         if (_simplexTableau[i][pivotColumn] > 1e-9) { // Using a small epsilon for comparison with 0
           double ratio = _simplexTableau[i][numVariables + numRestrictions] /
               _simplexTableau[i][pivotColumn];
@@ -84,24 +83,24 @@ class SimplexSolver {
       }
 
       if (pivotRow == -1) {
-        // This indicates an unbounded problem or an error in logic.
+        // Esto indica un problema no acotado o un error en la lógica.
         print('Problema no acotado o sin solución factible.');
-        // Set optimal solution and Z value to null to indicate an unsolved state.
+        // Establece la solución óptima y el valor Z en null para indicar un estado no resuelto.
         _optimalSolution = null;
         _optimalZValue = null;
         canImprove = false;
         break;
       }
 
-      // Perform pivot operation
+      // Realizar la operación de pivoteo
       double pivotElement = _simplexTableau[pivotRow][pivotColumn];
 
-      // Normalize the pivot row
+      // Normalizar la fila pivote
       for (int j = 0; j < numVariables + numRestrictions + 1; j++) {
         _simplexTableau[pivotRow][j] /= pivotElement;
       }
 
-      // Make other elements in the pivot column zero
+      // Hacer cero los demás elementos en la columna pivote
       for (int i = 0; i < numRestrictions + 1; i++) {
         if (i != pivotRow) {
           double factor = _simplexTableau[i][pivotColumn];
@@ -112,28 +111,28 @@ class SimplexSolver {
       }
     }
 
-    // --- Extract Optimal Solution ---
+    // --- Extraer la solución óptima ---
     _optimalSolution = List.filled(numVariables, 0.0);
     for (int j = 0; j < numVariables; j++) {
       int oneRow = -1;
       int countOnes = 0;
       for (int i = 1; i < numRestrictions + 1; i++) {
-        // Check if the element is approximately 1.0
+        // Verifica si el elemento es aproximadamente 1.0
         if ((_simplexTableau[i][j] - 1.0).abs() < 1e-9) {
           oneRow = i;
           countOnes++;
         }
       }
-      // If there's exactly one '1' in the column (and others are 0, implicitly by pivot operations)
-      // then it's a basic variable. Added check for oneRow != -1 for safety.
+      // Si hay exactamente un '1' en la columna (y los demás son 0, implícitamente por las operaciones de pivoteo)
+      // entonces es una variable básica. Se añade la comprobación de oneRow != -1 por seguridad.
       if (countOnes == 1 && oneRow != -1) {
         _optimalSolution![j] = _simplexTableau[oneRow][numVariables + numRestrictions];
       } else {
-        _optimalSolution![j] = 0.0; // Non-basic variable
+        _optimalSolution![j] = 0.0; // Variable no básica
       }
     }
 
-    // Optimal Z value is in the first row, last column, with negated sign
+    // El valor óptimo de Z está en la primera fila, última columna, con signo negado
     _optimalZValue = -_simplexTableau[0][numVariables + numRestrictions];
   }
 }
