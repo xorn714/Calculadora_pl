@@ -131,8 +131,6 @@ class SimplexSolver {
         _optimalSolution![j] = 0.0; // Variable no básica
       }
     }
-
-    // El valor óptimo de Z está en la primera fila, última columna, con signo negado
     _optimalZValue = _simplexTableau[0][numVariables + numRestrictions];
   }
 }

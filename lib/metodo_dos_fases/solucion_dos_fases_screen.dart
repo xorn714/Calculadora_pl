@@ -89,7 +89,6 @@ class SolucionDosFasesScreen extends StatelessWidget {
                                 style: const TextStyle(color: Colors.black),
                               ),
                             ))
-                        .toList(),
                   ],
                 ),
               ),
