@@ -1,6 +1,4 @@
-// lib/simplex_solver.dart
-
-/// Clase que implementa la lógica del método Simplex para problemas de programación lineal.
+// Clase que implementa la lógica del método Simplex para problemas de programación lineal.
 class SimplexSolver {
   final List<double> objectiveFunctionCoefficients;
   final List<List<double>> constraintCoefficients;
@@ -35,7 +33,6 @@ class SimplexSolver {
     );
 
     // Llena la fila de la función objetivo (primera fila del tableau).
-    // Se accede a los elementos de _simplexTableau sin '!' ya que está garantizado que no es nulo.
     for (int j = 0; j < numVariables; j++) {
       _simplexTableau[0][j] = -objectiveFunctionCoefficients[j];
     }
@@ -84,7 +81,6 @@ class SimplexSolver {
 
       if (pivotRow == -1) {
         // Esto indica un problema no acotado o un error en la lógica.
-        print('Problema no acotado o sin solución factible.');
         // Establece la solución óptima y el valor Z en null para indicar un estado no resuelto.
         _optimalSolution = null;
         _optimalZValue = null;

@@ -1,16 +1,36 @@
-# calculadora_pl
+# Calculadora de Programación Lineal
 
-A new Flutter project.
+Este proyecto es una calculadora interactiva de Programación Lineal desarrollada en Flutter. Permite resolver problemas de optimización lineal utilizando tres métodos clásicos:
 
-## Getting Started
+- **Método Simplex**
+- **Método Gráfico**
+- **Método de Dos Fases**
 
-This project is a starting point for a Flutter application.
+## Estructura del Proyecto
 
-A few resources to get you started if this is your first Flutter project:
+- `lib/`
+  - `main.dart`: Punto de entrada de la aplicación.
+  - `metodo_simplex/`: Pantallas y lógica del método Simplex.
+  - `metodo_grafico/`: Pantallas y lógica del método gráfico.
+  - `metodo_dos_fases/`: Pantallas y lógica del método de dos fases.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Requisitos
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Flutter SDK
+- Dart
+
+## Instalación
+
+1. Clona este repositorio.
+2. Ejecuta `flutter pub get` para instalar las dependencias.
+3. Inicia la aplicación con `flutter run`.
+
+## Uso
+
+1. Al abrir la app, selecciona el método de resolución que deseas utilizar.
+2. Ingresa los datos del problema (función objetivo, restricciones, etc.).
+3. Pulsa "Calcular" para ver la solución y los pasos intermedios.
+
+## Licencia
+
+MIT
